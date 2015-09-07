@@ -1,7 +1,10 @@
-all:start.o kernel.o linker.ld
-	ld -m elf_i386 -T linker.ld -o myos.bin -nostdlib kernel.o start.o
+all:start.o gdt.o kernel.o linker.ld
+	ld -m elf_i386 -T linker.ld -o myos.bin -nostdlib kernel.o gdt.o start.o
 start.o:start.asm
 	nasm -f elf start.asm -o start.o
+gdt.o: gdt.c
+	gcc -c gdt.c -o gdt.o -std=c99 -m32 -ffreestanding -O2
+
 kernel.o:kernel.c
 	gcc -c kernel.c -o kernel.o -std=c99 -m32 -ffreestanding -O2
 qemu:myos.bin
