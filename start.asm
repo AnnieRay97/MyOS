@@ -16,7 +16,7 @@ align 4
 	dd FLAGS	;define double word(4bytes)
 	dd CHECKSUM
 
-; Currently the stack pointer register (esp) points at anything and using it may; cause massive harm. Instead we'll provide our own  stack. We will allocate
+; Currently the stack pointer register (esp) points at anytihng and using it may; cause massive harm. Instead we'll provide our own  stack. We will allocate
 ; room for a small temporary stack by  creating a symbol at the bottom of it,
 ; then allocating 16384 bytes for it. and finally creating a symbol at the top.
 section .bootstrap_stack, nobits
@@ -41,10 +41,31 @@ _start:
 	;we'll create a C entry point called kernel_main and  call it here.
 	extern kernel_main
 	call kernel_main
-	
+	jmp $	
 	; In case the function returns, we'll  have to put the computer into an
-	; infinite loop. To do that, we use the clear interrupt(cli) instruction	; to disable interrupts, the halt instruction{hlt} to stop the CPU until	; the next interrupt arrives, and jumping to the halt instruction if it 	; ever continues execution, just to be safe.
+	; infinite loop. 
+	; This will set up our new segment registers.We need to do
+	; something special in order to set CS. We do what is called a
+	; far jump. A jump that includes a segment as well as an offset.
+	; This is declared in C as 'extern void gdt_flush()'
+
+global gdt_flush	; Allows the C Code to link to this
+extern gp		; says that 'gp' is in another file
+gdt_flush:
+	lgdt [gp]	;Load the GDT with our 'gp' which is in another file
+	mov ax, 0x10
+	mov ds, ax	
+	mov es, ax
+	mov fs, ax;
+	mov gs, ax;
+	mov ss, ax;
+
 	cli
-.hang:
-	hlt
-	jmp .hang
+	lgdt [gp]
+	mov eax, cr0
+	or al, 1
+	mov cr0, eax
+
+	jmp 0x08:flush2	;0x08 is the offset to our code segment: Far jump!!
+flush2:
+	ret	; Returns back to the C code!
