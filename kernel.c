@@ -1,7 +1,7 @@
+extern void gdt_install();
 unsigned int i=0, j=0;
 char * vidptr = (char*)0xb8000;	//video memory begins here.
 int linecount=0;
-
 void clear ()
 {
 	i=0;
@@ -41,6 +41,7 @@ void printf (const char* words)
 
 void kernel_main()
 {
+	gdt_install();	
 	const char *str = "Hello World \nWelcome to My First Kernel\n-Elix";
 	const char *str2 = "\nThis is a new function call \nI love this!!";	
 	
@@ -48,6 +49,11 @@ void kernel_main()
 	printf (str);
 //	clear();
 	printf (str2);
-
+	/*
+	int check[10];
+	int i=0;
+	for (i=0;i<10; i++)
+	check[i]=i;		
+	*/
 	return;
 }
